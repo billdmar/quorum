@@ -1,7 +1,7 @@
 // Package integration wires the deterministic simulator to the verifier army —
 // the Raft safety-invariant monitors and the Porcupine linearizability checker —
 // and runs them across the registered seed × schedule × cluster-size matrix.
-// This is the driver  assembles at  from the frozen contracts and the 
+// This is the driver  assembles at  from the frozen contracts and the
 // packages; nothing here weakens a registry bound or shrinks a sweep.
 package integration
 
