@@ -1,7 +1,8 @@
 // Package storage defines the durable-storage contract for a Raft node and its
 // implementations (a write-ahead log with term/vote durability, snapshot files,
 // and fsync discipline). The interface is frozen at ; implementations land in
-//  (SA-storage) and  (snapshots).
+//
+//	(SA-storage) and  (snapshots).
 //
 // FSYNC DISCIPLINE (the correctness heart of this package): every method whose
 // name promises durability MUST NOT return until the data is fsync'd to stable

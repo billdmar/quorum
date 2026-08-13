@@ -1,6 +1,6 @@
 package check
 
-// Regression tests for the incarnation-aware commit-monotonicity check. The 
+// Regression tests for the incarnation-aware commit-monotonicity check. The
 // seed sweep surfaced that a crashed node legitimately resets its VOLATILE
 // commitIndex to 0 on restart (Raft Figure 2), which the original monitor
 // mis-flagged as a monotonicity violation. The monitor now rebaselines across an

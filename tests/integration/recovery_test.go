@@ -84,7 +84,7 @@ func committedAgreementViolation(view check.ClusterView) string {
 				ea, aok := a.byIdx[idx]
 				eb, bok := b.byIdx[idx]
 				if !aok || !bok {
-					continue // entry compacted out of one's in-memory log; fine at 
+					continue // entry compacted out of one's in-memory log; fine at
 				}
 				if ea.Term != eb.Term || string(ea.Command) != string(eb.Command) {
 					return "nodes " + string(a.id) + " and " + string(b.id) +
