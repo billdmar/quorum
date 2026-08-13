@@ -6,7 +6,7 @@
 // REGISTRY RULE (critical): nothing in this file is ever weakened to
 // turn a red run green. A violation means investigate the bug, fix it, and
 // commit the failing seed as a regression test — never relax a bound, shrink a
-// sweep, or drop a schedule. Changes here go through the  only and
+// sweep, or drop a schedule. Changes here go through code review only and
 // must update the justification alongside the value.
 package config
 
