@@ -23,12 +23,12 @@ busy machine or a non-release build.
 
 | Metric | Result |
 |---|---|
-| Verified runs — verification () | **10,000** (1,000 seeds × 5-schedule base matrix × {3,5} nodes) |
-| Verified runs — full gate () | **140,000** (10,000 seeds × 7-schedule full matrix × {3,5} nodes) |
+| Verified runs — verification (G1) | **10,000** (1,000 seeds × 5-schedule base matrix × {3,5} nodes) |
+| Verified runs — full gate (G2) | **140,000** (10,000 seeds × 7-schedule full matrix × {3,5} nodes) |
 | Raft safety-invariant violations | **0** |
 | Non-linearizable histories (Porcupine) | **0** |
 | Defects found & fixed by the verification process | 7 (2 pinned as regression seeds: `507`, `7503`) |
-| Core-package coverage | **95.3%** (unit tests ∪ the  sweep) |
+| Core-package coverage | **95.3%** (unit tests ∪ the G2 sweep) |
 | Crash-recovery | converges under `crashy` + `disk-faulty` (kills at fsync boundaries) |
 | Concurrency safety | `go test -race` clean; 60-run robustness sweep, 0 races |
 | Throughput (3-node loopback, unbatched, 32 clients) | **~117k ops/sec**, p50 0.05 ms, **p99 4.8 ms** |
@@ -82,7 +82,7 @@ stack possible.
 Every failing seed becomes a **committed regression test**, and no fault schedule,
 seed floor, or invariant bound is *ever* relaxed to turn a red run green. The
 verification process found **seven real defects**: six during the gated build (two
-at the  verification, four at the  full gate — each in the test harness or a
+at the G1 verification, four at the G2 full gate — each in the test harness or a
 monitor, none in Raft safety), plus one in the P6 membership feature caught by an
 adversarial code review (log compaction silently reverted committed cluster
 membership). Each was fixed at the root and pinned by a regression test — written
@@ -114,13 +114,13 @@ CLIENTS=N1=127.0.0.1:8001,N2=127.0.0.1:8002,N3=127.0.0.1:8003
 ## Reproduce every number
 
 ```sh
-# verification (): 10,000 verified runs, base matrix × {3,5} nodes.
+# verification (G1): 10,000 verified runs, base matrix × {3,5} nodes.
 go test ./tests/integration/ -run TestSeedSweepG1 -timeout 30m -args -seeds=1000
 
-# Full gate (): 140,000 verified runs, full matrix × {3,5} nodes.
+# Full gate (G2): 140,000 verified runs, full matrix × {3,5} nodes.
 go test ./tests/integration/ -run TestSeedSweepG2 -timeout 60m -args -seeds=10000
 
-# Core coverage (95.3%): merge unit-test coverage with the  sweep's coverage.
+# Core coverage (95.3%): merge unit-test coverage with the G2 sweep's coverage.
 D=$(mktemp -d)
 go test -coverpkg=./core/... ./core/... -args -test.gocoverdir=$D
 go test -coverpkg=./core/... ./tests/integration/ -run TestSeedSweepG2 -args -seeds=200 -test.gocoverdir=$D
