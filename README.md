@@ -1,4 +1,4 @@
-# quorum
+# quorum — verified Raft consensus & replicated KV in Go
 
 [![CI](https://github.com/billdmar/quorum/actions/workflows/ci.yml/badge.svg)](https://github.com/billdmar/quorum/actions/workflows/ci.yml)
 [![Go 1.23](https://img.shields.io/badge/Go-1.23-00ADD8?logo=go&logoColor=white)](go.mod)
