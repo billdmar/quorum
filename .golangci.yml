@@ -1,0 +1,28 @@
+# golangci-lint v2 configuration.
+# Kept deliberately conservative: the linters that catch real correctness and
+# hygiene issues in a distributed-systems codebase, nothing noisy.
+version: "2"
+
+linters:
+  enable:
+    - errcheck      # unchecked errors — critical for storage/fsync discipline
+    - govet         # suspicious constructs
+    - ineffassign   # ineffectual assignments
+    - staticcheck   # broad correctness + simplification suite
+    - unused        # dead code
+    - misspell      # doc/comment typos
+    - unconvert     # redundant type conversions
+    - copyloopvar   # loop-variable capture bugs
+  settings:
+    staticcheck:
+      checks:
+        - all
+
+formatters:
+  enable:
+    - gofmt
+    - goimports
+
+issues:
+  max-issues-per-linter: 0
+  max-same-issues: 0

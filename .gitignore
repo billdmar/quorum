@@ -1,0 +1,25 @@
+
+# Build artifacts
+/bin/
+*.log
+*.out
+coverage.out
+coverage.html
+*.cover
+/covdata/
+
+# Secrets / local env (this project has none today — see PR notes — but guard anyway)
+.env
+.env.*
+
+# Session scratch — working checklist + handoff, not part of the reviewed change
+HANDOFF.md
+POLISH_PLAN.md
+
+# Trace / sweep artifacts
+/artifacts/
+*.trace
+
+# OS / editor
+.DS_Store
+*.swp

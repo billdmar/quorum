@@ -1,0 +1,99 @@
+name: CI
+
+on:
+  push:
+    branches: [main]
+  pull_request:
+    branches: [main]
+
+permissions:
+  contents: read
+
+jobs:
+  build-test:
+    name: build · lint · test · race · seed-sweep
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v4
+
+      - name: Set up Go
+        uses: actions/setup-go@v5
+        with:
+          # Toolchain version (>= the go.mod 1.23 language floor). Pinned to a
+          # supported line: the EOL 1.23.x branch ships net@go1.23.12, which is
+          # affected by GO-2026-4971 (fixed in net@go1.25.10) — using it made the
+          # govulncheck job fail on an unpatched stdlib.
+          go-version: "1.26"
+          check-latest: true
+
+      - name: Verify gofmt
+        run: |
+          unformatted=$(gofmt -l .)
+          if [ -n "$unformatted" ]; then
+            echo "These files are not gofmt-clean:"
+            echo "$unformatted"
+            exit 1
+          fi
+
+      - name: Build
+        run: go build ./...
+
+      - name: Vet
+        run: go vet ./...
+
+      - name: golangci-lint
+        uses: golangci/golangci-lint-action@v7
+        with:
+          version: v2.12.2
+
+      - name: Unit tests
+        run: go test ./...
+
+      - name: Race tests (runtime paths)
+        run: go test -race ./...
+
+      # Bounded seed sweep so CI stays fast; the full 1k/10k sweeps run
+      # in extended runs as background jobs, not in CI. The sim package and its
+      # TestSeedSweep land at /; until then this step is a documented
+      # no-op that activates automatically once ./sim exists.
+      - name: Simulator determinism + bounded sweep (200 seeds)
+        run: go test ./sim/... -run TestSeedSweep -args -seeds=200
+
+      # The verification at CI scale: the fully-verified pipeline (invariant monitors
+      # on every step + Porcupine on every history) across the base fault matrix
+      # x {3,5} nodes. Bounded to SeedFloorCI=200 seeds so CI stays fast; the full
+      # 1,000-seed () / 10,000-seed () sweeps run in extended runs.
+      - name: Verified seed sweep (200 seeds, base matrix)
+        run: go test ./tests/integration/ -run TestSeedSweepG1 -timeout 15m -args -seeds=200
+
+      # The full verification gate at CI scale: the FULL matrix (adds disk-faulty
+      # + kitchen-sink) exercising snapshots, ReadIndex, and exactly-once. Bounded
+      # to 100 seeds for CI speed; the full 10,000-seed  sweep runs in extended runs.
+      - name: Verified seed sweep (100 seeds, full matrix)
+        run: go test ./tests/integration/ -run TestSeedSweepG2 -timeout 15m -args -seeds=100
+
+      #  semantic assertions: exactly-once under retries, InstallSnapshot
+      # catch-up actually fires, restart-from-snapshot converges.
+      - name:  semantic assertions
+        run: go test ./tests/integration/ -run 'TestExactlyOnceUnderRetries|TestInstallSnapshotCatchUp|TestRestartFromSnapshotConverges' -timeout 10m
+
+  # Vulnerability scan runs as its own job so a vuln-DB outage can't red the main
+  # build. non-blocking (continue-on-error): it surfaces advisories without gating
+  # merges on network availability to the Go vulnerability database.
+  govulncheck:
+    name: govulncheck (advisory)
+    runs-on: ubuntu-latest
+    continue-on-error: true
+    steps:
+      - uses: actions/checkout@v4
+      - name: Set up Go
+        uses: actions/setup-go@v5
+        with:
+          # Must be a supported/patched line (>= 1.25.10) so the stdlib itself is
+          # free of GO-2026-4971; the EOL 1.23.x branch never got the net fix.
+          go-version: "1.26"
+          check-latest: true
+      - name: Install govulncheck
+        run: go install golang.org/x/vuln/cmd/govulncheck@latest
+      - name: Scan
+        run: govulncheck ./...
